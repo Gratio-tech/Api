@@ -13,8 +13,8 @@ function generateTypesFromOpenAPI() {
   try {
     // Путь к OpenAPI спецификации
     const openAPIPath = path.join(__dirname, '../docs/openapi.json');
-    const outputPath = path.join(__dirname, 'generated-types.ts');
-    
+    const outputPath = path.join(__dirname, 'generated.ts');
+
     if (!fs.existsSync(openAPIPath)) {
       console.error('OpenAPI файл не найден:', openAPIPath);
       return;
@@ -25,12 +25,12 @@ function generateTypesFromOpenAPI() {
 
     // Генерируем TypeScript типы
     const typesContent = generateTypeScriptTypes(openAPI);
-    
+
     // Записываем в файл
     fs.writeFileSync(outputPath, typesContent, 'utf8');
-    
+
     console.log('Типы успешно сгенерированы в:', outputPath);
-    
+
   } catch (error) {
     console.error('Ошибка при генерации типов:', error);
   }
@@ -67,17 +67,17 @@ function generateSchemaType(name, schema) {
 // Генерация типа объекта
 function generateObjectType(name, schema) {
   let typeContent = `export type ${name} = {\n`;
-  
+
   if (schema.properties) {
     Object.entries(schema.properties).forEach(([propName, propSchema]) => {
       const isRequired = schema.required?.includes(propName);
       const propType = getPropertyType(propSchema);
       const optional = isRequired ? '' : '?';
-      
+
       typeContent += `  ${propName}${optional}: ${propType};\n`;
     });
   }
-  
+
   typeContent += '};';
   return typeContent;
 }
@@ -85,7 +85,7 @@ function generateObjectType(name, schema) {
 // Генерация union типа
 function generateUnionType(name, schema) {
   const unionTypes = [];
-  
+
   if (schema.anyOf) {
     schema.anyOf.forEach(item => {
       if (item.$ref) {
@@ -96,7 +96,7 @@ function generateUnionType(name, schema) {
       }
     });
   }
-  
+
   return `export type ${name} = ${unionTypes.join(' | ')};`;
 }
 
@@ -111,7 +111,7 @@ function getPropertyType(schema) {
   if (schema.$ref) {
     return schema.$ref.split('/').pop();
   }
-  
+
   switch (schema.type) {
     case 'string':
       if (schema.enum) {
@@ -136,6 +136,9 @@ function getPropertyType(schema) {
 // Запуск генерации
 if (require.main === module) {
   generateTypesFromOpenAPI();
+
+  // Здесь нужно добавить ветвление через параметры, передаваемые этому скрипту:
+  // нужно иметь возможность генерировать типы как из URL, так и из файла
 }
 
 module.exports = { generateTypesFromOpenAPI };
