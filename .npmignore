@@ -1,0 +1,5 @@
+index.ts
+node_modules
+package-lock.json
+scripts
+tsconfig.json

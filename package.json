@@ -1,0 +1,32 @@
+{
+  "name": "@gratio/api",
+  "version": "1.0.0",
+  "description": "TypeScript common types for Gratio projects API responses and requests",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "clean": "rimraf dist"
+  },
+  "author": "Gratio",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "rimraf": "^5.0.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/api-types.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/api-types/issues"
+  },
+  "homepage": "https://github.com/your-org/api-types#readme"
+}
