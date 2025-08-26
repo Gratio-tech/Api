@@ -42,11 +42,6 @@ gratio-generate-types --url https://api.example.com/openapi.json
 npx @gratio/api generate-types --file ./api/schema.json
 ```
 
-## Документация
-
-- **[Подробное руководство](USAGE.md)** - Полное описание возможностей и примеров
-- **[Примеры использования](#примеры-использования-в-проектах)** - Базовые примеры в этом README
-
 ## Доступные типы
 
 ### Основные типы API
