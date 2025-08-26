@@ -11,11 +11,7 @@ tsconfig.json
 # Примеры и документация
 example-*.json
 example-*.ts
-USAGE.md
-DEPLOYMENT.md
 CHANGELOG.md
-QUICKSTART.md
-PROJECT_STRUCTURE.md
 
 # Временные файлы
 *.log

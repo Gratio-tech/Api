@@ -2,20 +2,20 @@
 
 TypeScript типы для API ответов и запросов в проектах Gratio. Пакет предоставляет базовые типы для работы с API и включает в себя скрипт для автоматической генерации типов из OpenAPI спецификаций.
 
-## 🚀 Возможности
-
+## Возможности
 - **Базовые типы API**: `ApiResponse<T>`, `ApiSuccessResponse<T>`, `ApiErrorResponse`
 - **Автоматическая генерация типов**: Скрипт для создания TypeScript типов из OpenAPI схем
 - **Гибкость источников**: Поддержка URL и локальных файлов схем
 - **Готовность к продакшену**: Типизированные ответы с обработкой ошибок
 
-## 📦 Установка
-
+## Установка
 ```bash
 npm install @gratio/api
+# Для использования шифрованных запросов:
+npm install @gratio/crypt
 ```
 
-## 🔧 Быстрый старт
+## Быстрый старт
 
 ### Использование базовых типов
 
@@ -31,7 +31,7 @@ const response: ApiResponse<string> = {
 ### Генерация типов для проекта
 
 ```bash
-# Рекомендуемый способ - использование npx (не требует установки)
+# Использование npx (не требует установки)
 npx @gratio/api generate-types --url https://api.example.com/openapi.json
 
 # Глобальная установка для постоянного использования
@@ -39,21 +39,13 @@ npm install -g @gratio/api
 gratio-generate-types --url https://api.example.com/openapi.json
 
 # Генерация из локального файла схемы
-npx @gratio/api generate-types --file ./api-schema.json
+npx @gratio/api generate-types --file ./api/schema.json
 ```
 
-## 📚 Документация
+## Документация
 
 - **[Подробное руководство](USAGE.md)** - Полное описание возможностей и примеров
 - **[Примеры использования](#примеры-использования-в-проектах)** - Базовые примеры в этом README
-
-## Установка
-
-```bash
-npm install @gratio/api
-# Для использования шифрованных запросов:
-npm install @gratio/crypt
-```
 
 ## Доступные типы
 
@@ -101,27 +93,33 @@ async getEncryptedData(): Promise<ApiResponseCrypted> {
 
 Для получения типов конкретного проекта используйте встроенный скрипт генерации типов:
 
-### Установка глобально (рекомендуется)
-
 ```bash
+# Установка глобально
 npm install -g @gratio/api
 gratio-generate-types --url https://api.example.com/openapi.json
-```
 
-### Использование локально
-
-```bash
+# Без установки
 npx @gratio/api generate-types --url https://api.example.com/openapi.json
 ```
 
-### Опции скрипта
+## Опции скрипта генерации
+
+| Опция | Короткая | Описание | Пример |
+|-------|----------|----------|---------|
+| `--url` | `-u` | URL к OpenAPI спецификации | `--url https://api.example.com/openapi.json` |
+| `--file` | `-f` | Путь к локальному файлу схемы | `--file ./schema.json` |
+| `--output` | `-o` | Путь для выходного файла | `--output ./src/types/api.ts` |
+| `--format` | `--fmt` | Формат выходного файла | `--format json` |
+| `--help` | `-h` | Показать справку | `--help` |
+
+### Примеры команд:
 
 ```bash
 # Генерация из URL (основной способ использования)
 npx @gratio/api generate-types --url https://api.example.com/openapi.json
 
 # Генерация из локального файла
-npx @gratio/api generate-types --file ./api-schema.json
+npx @gratio/api generate-types --file ./api/schema.json
 
 # Указание выходного файла (по умолчанию: ./generated-types.ts)
 npx @gratio/api generate-types --url https://api.example.com/openapi.json --output ./types/api.ts
@@ -140,7 +138,7 @@ npx @gratio/api generate-types --help
 ```json
 {
   "scripts": {
-    "generate-types": "npx @gratio/api generate-types --url https://your-api.example.com/openapi.json --output ./src/types/api.ts",
+    "generate-types": "npx @gratio/api generate-types --url https://your-api.example.com/openapi.json --output ./generated/api.ts",
     "build": "npm run generate-types && tsc"
   }
 }
@@ -151,25 +149,12 @@ npx @gratio/api generate-types --help
 npm run generate-types
 ```
 
-## Примеры использования в проектах
+## Использование сгенерированных типов в коде
 
-### Настройка в новом проекте
-
-1. **Установите пакет типов:**
-   ```bash
-   npm install @gratio/api
-   ```
-
-2. **Сгенерируйте типы для вашего API:**
-   ```bash
-   npx @gratio/api generate-types --url https://your-api.example.com/openapi.json --output ./src/types/api.ts
-   ```
-
-3. **Используйте сгенерированные типы в коде:**
    ```typescript
    import type { ApiResponse } from '@gratio/api';
    import type { User, CreateUserRequest } from './types/api';
-   
+
    const createUser = async (userData: CreateUserRequest): Promise<ApiResponse<User>> => {
      const response = await fetch('/api/users', {
        method: 'POST',
@@ -277,49 +262,13 @@ const leadResult = await client.post<{ id: string }, { leadID: string }>(
 );
 ```
 
-### Автоматизация в CI/CD
-
-#### GitHub Actions
-
-```yaml
-name: Generate API Types
-on:
-  schedule:
-    - cron: '0 2 * * *' # Каждый день в 2:00 UTC
-  workflow_dispatch: # Ручной запуск
-
-jobs:
-  generate-types:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          
-      - name: Generate API types
-        run: |
-          npx @gratio/api generate-types --url ${{ secrets.API_OPENAPI_URL }} --output ./src/types/api.ts
-          
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          commit-message: 'chore: update API types'
-          title: 'Update API types from OpenAPI schema'
-          body: 'Automatically generated API types from OpenAPI specification'
-          branch: update-api-types
-```
-
-#### Package.json scripts для разработки
+#### Пример package.json scripts для проекта
 
 ```json
 {
   "scripts": {
-    "types:generate": "npx @gratio/api generate-types --url https://api.example.com/openapi.json --output ./src/types/api.ts",
-    "types:generate:local": "npx @gratio/api generate-types --file ./schema.json --output ./src/types/api.ts",
-    "types:validate": "tsc --noEmit --project ./src/types",
+    "types:generate": "npx @gratio/api generate-types --url https://api.example.com/openapi.json --output ./generated/api.ts",
+    "types:generate:local": "npx @gratio/api generate-types --file ./schema.json --output ./generated/api.ts",
     "prebuild": "npm run types:generate",
     "build": "tsc",
     "dev": "npm run types:generate && npm run dev:start"
@@ -335,9 +284,6 @@ npm install
 
 # Сборка
 npm run build
-
-# Очистка
-npm run clean
 
 # Показать справку по генерации типов
 npm run generate-types
@@ -384,12 +330,6 @@ npm publish
 ```bash
 npm version patch  # или minor, major
 npm publish
-```
-
-## Использование в других проектах
-
-```bash
-npm install @gratio/api
 ```
 
 ## Лицензия

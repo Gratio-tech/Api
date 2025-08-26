@@ -22,9 +22,6 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
-coverage/
-
 # nyc test coverage
 .nyc_output
 
@@ -40,9 +37,6 @@ jspm_packages/
 # Output of 'npm pack'
 *.tgz
 
-# Yarn Integrity file
-.yarn-integrity
-
 # dotenv environment variables file
 .env
 
@@ -51,6 +45,11 @@ jspm_packages/
 .idea/
 *.swp
 *.swo
+.editorconfig
+
+# Pulsar-editor plugin-config to load code on server (may content passwords)
+.sync.json
+
 
 # OS generated files
 .DS_Store

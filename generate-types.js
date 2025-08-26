@@ -3,7 +3,7 @@
 /**
  * Скрипт для автоматической генерации типов из OpenAPI спецификации
  * Может работать как с URL, так и с локальными файлами схем
- * 
+ *
  * Использование:
  * npx @gratio/api generate-types --url https://api.example.com/openapi.json
  * npx @gratio/api generate-types --file ./schema.json
@@ -20,34 +20,34 @@ const http = require('http');
 function parseArgs() {
   const args = process.argv.slice(2);
   const options = {};
-  
+
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
+
     if (arg === '--help' || arg === '-h') {
       showHelp();
       process.exit(0);
     } else if (arg === '--url' || arg === '-u') {
       if (i + 1 >= args.length) {
-        console.error('❌ Ошибка: Не указан URL после --url');
+        console.error('Ошибка: Не указан URL после --url');
         process.exit(1);
       }
       options.url = args[++i];
     } else if (arg === '--file' || arg === '-f') {
       if (i + 1 >= args.length) {
-        console.error('❌ Ошибка: Не указан путь к файлу после --file');
+        console.error('Ошибка: Не указан путь к файлу после --file');
         process.exit(1);
       }
       options.file = args[++i];
     } else if (arg === '--output' || arg === '-o') {
       if (i + 1 >= args.length) {
-        console.error('❌ Ошибка: Не указан путь к выходному файлу после --output');
+        console.error('Ошибка: Не указан путь к выходному файлу после --output');
         process.exit(1);
       }
       options.output = args[++i];
     } else if (arg === '--format' || arg === '--fmt') {
       if (i + 1 >= args.length) {
-        console.error('❌ Ошибка: Не указан формат после --format');
+        console.error('Ошибка: Не указан формат после --format');
         process.exit(1);
       }
       options.format = args[++i];
@@ -55,51 +55,50 @@ function parseArgs() {
       // Игнорируем команду generate-types для npx @gratio/api generate-types
       continue;
     } else {
-      console.error(`❌ Неизвестный аргумент: ${arg}`);
+      console.error(`Неизвестный аргумент: ${arg}`);
       console.log('Используйте --help для получения справки');
       process.exit(1);
     }
   }
-  
+
   return options;
 }
 
 // Показать справку
 function showHelp() {
-  console.log(`
-🔧 Скрипт генерации TypeScript типов из OpenAPI спецификации
+  console.log(`Скрипт генерации TypeScript типов из OpenAPI спецификации
 
-📋 Использование:
+Использование:
   npx @gratio/api generate-types [опции]
   gratio-generate-types [опции]                    (если установлен глобально)
   node generate-types.js [опции]                   (локальное выполнение)
 
-⚙️  Опции:
+Опции:
   --url, -u <URL>           URL к OpenAPI спецификации
   --file, -f <путь>         Путь к локальному файлу схемы
   --output, -o <путь>       Путь для выходного файла (по умолчанию: ./generated-types.ts)
   --format, --fmt <формат>  Формат выходного файла: typescript, json (по умолчанию: typescript)
   --help, -h                Показать эту справку
 
-📝 Примеры использования:
+Примеры использования:
 
   # Генерация из URL (рекомендуемый способ)
   npx @gratio/api generate-types --url https://api.example.com/openapi.json
-  
+
   # Генерация из локального файла
   npx @gratio/api generate-types --file ./api-schema.json
-  
+
   # Указание выходного файла
   npx @gratio/api generate-types --url https://api.example.com/openapi.json --output ./types/api.ts
-  
+
   # Генерация в формате JSON (для отладки)
   npx @gratio/api generate-types --file ./schema.json --format json
-  
+
   # Глобальная установка и использование
   npm install -g @gratio/api
   gratio-generate-types --url https://api.example.com/openapi.json
 
-💡 Совет: Для интеграции в проект добавьте скрипт в package.json:
+Совет: Для интеграции в проект добавьте скрипт в package.json:
   {
     "scripts": {
       "generate-types": "npx @gratio/api generate-types --url https://your-api.com/openapi.json"
@@ -120,27 +119,27 @@ function fetchSchema(url) {
     }
 
     const protocol = url.startsWith('https:') ? https : http;
-    
-    console.log(`📡 Загружаю схему из URL: ${url}`);
-    
+
+    console.log(`Загружаю схему из URL: ${url}`);
+
     const request = protocol.get(url, (res) => {
       // Обработка редиректов
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         console.log(`🔄 Редирект на: ${res.headers.location}`);
         return fetchSchema(res.headers.location).then(resolve).catch(reject);
       }
-      
+
       if (res.statusCode !== 200) {
         reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage} при загрузке ${url}`));
         return;
       }
 
       let data = '';
-      
+
       res.on('data', (chunk) => {
         data += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const schema = JSON.parse(data);
@@ -177,7 +176,7 @@ function loadSchemaFromFile(filePath) {
       throw new Error(`Указанный путь не является файлом: ${filePath}`);
     }
 
-    console.log(`📂 Загружаю схему из файла: ${filePath}`);
+    console.log(`Загружаю схему из файла: ${filePath}`);
     const content = fs.readFileSync(filePath, 'utf8');
     const schema = JSON.parse(content);
     console.log(`✅ Схема успешно загружена из файла (${content.length} символов)`);
@@ -196,7 +195,7 @@ function generateTypeScriptTypes(openAPI) {
   let typesContent = `// Автоматически сгенерированные типы из OpenAPI спецификации
 // Не редактируйте этот файл вручную!
 // Сгенерировано: ${new Date().toISOString()}
-
+/////////////////////////////////////////////
 `;
 
   // Генерируем типы для каждой схемы
@@ -292,7 +291,7 @@ function getPropertyType(schema) {
 async function generateTypes(options) {
   try {
     let openAPI;
-    
+
     // Определяем источник схемы
     if (options.url) {
       openAPI = await fetchSchema(options.url);
@@ -308,28 +307,28 @@ async function generateTypes(options) {
     }
 
     if (!openAPI.openapi && !openAPI.swagger) {
-      console.warn('⚠️  Предупреждение: Схема может не быть валидной OpenAPI/Swagger спецификацией');
+      console.warn(' Предупреждение: Схема может не быть валидной OpenAPI/Swagger спецификацией');
     }
 
     // Определяем путь для выходного файла
     const outputPath = options.output || './generated-types.ts';
-    
+
     // Создаем директорию для выходного файла, если она не существует
     const outputDir = path.dirname(outputPath);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
-      console.log(`📁 Создана директория: ${outputDir}`);
+      console.log(`Создана директория: ${outputDir}`);
     }
-    
+
     // Генерируем типы
     let outputContent;
     if (options.format === 'json') {
-      console.log('📝 Генерирую JSON файл...');
+      console.log('Генерирую JSON файл...');
       outputContent = JSON.stringify(openAPI, null, 2);
     } else {
-      console.log('📝 Генерирую TypeScript типы...');
+      console.log('Генерирую TypeScript типы...');
       outputContent = generateTypeScriptTypes(openAPI);
-      
+
       // Проверяем, что типы были сгенерированы
       if (!outputContent.trim()) {
         throw new Error('Не удалось сгенерировать типы - схема не содержит определений компонентов');
@@ -339,26 +338,26 @@ async function generateTypes(options) {
     // Записываем в файл
     fs.writeFileSync(outputPath, outputContent, 'utf8');
     const stats = fs.statSync(outputPath);
-    console.log(`✅ Типы успешно сгенерированы в: ${outputPath} (${stats.size} байт)`);
+    console.log(`Типы успешно сгенерированы в: ${outputPath} (${stats.size} байт)`);
 
     // Дополнительная информация
     if (options.format !== 'json') {
       const schemas = openAPI.components?.schemas || {};
       const schemasCount = Object.keys(schemas).length;
       if (schemasCount > 0) {
-        console.log(`📊 Сгенерировано типов: ${schemasCount}`);
+        console.log(`Сгенерировано типов: ${schemasCount}`);
       } else {
-        console.warn('⚠️  Предупреждение: В схеме не найдено определений типов (components.schemas)');
+        console.warn(' Предупреждение: В схеме не найдено определений типов (components.schemas)');
       }
     }
 
   } catch (error) {
-    console.error('❌ Ошибка при генерации типов:', error.message);
-    console.error('\n💡 Возможные решения:');
-    console.error('   • Проверьте правильность URL или пути к файлу');
-    console.error('   • Убедитесь, что схема является валидной OpenAPI спецификацией');
-    console.error('   • Проверьте доступность сетевого ресурса');
-    console.error('   • Используйте --help для получения справки');
+    console.error('Ошибка при генерации типов:', error.message);
+    console.error('\n Возможные решения:');
+    console.error('   - Проверьте правильность URL или пути к файлу');
+    console.error('   - Убедитесь, что схема является валидной OpenAPI спецификацией');
+    console.error('   - Проверьте доступность сетевого ресурса');
+    console.error('   - Используйте --help для получения справки');
     process.exit(1);
   }
 }
@@ -366,27 +365,27 @@ async function generateTypes(options) {
 // Запуск скрипта
 if (require.main === module) {
   const options = parseArgs();
-  
+
   // Проверяем, что указан хотя бы один источник данных
   if (!options.url && !options.file) {
-    console.error('❌ Ошибка: Необходимо указать источник данных');
+    console.error('Ошибка: Необходимо указать источник данных');
     console.error('Используйте --url для загрузки из интернета или --file для локального файла');
     console.log('\nИспользуйте --help для получения полной справки');
     process.exit(1);
   }
-  
+
   // Валидация формата
   if (options.format && !['typescript', 'json'].includes(options.format)) {
-    console.error('❌ Ошибка: Неподдерживаемый формат. Используйте: typescript или json');
+    console.error('Ошибка: Неподдерживаемый формат. Используйте: typescript или json');
     process.exit(1);
   }
-  
+
   generateTypes(options);
 }
 
-module.exports = { 
-  generateTypes, 
-  fetchSchema, 
+module.exports = {
+  generateTypes,
+  fetchSchema,
   loadSchemaFromFile,
-  generateTypeScriptTypes 
+  generateTypeScriptTypes
 };
