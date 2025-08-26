@@ -1,5 +1,18 @@
-index.ts
-node_modules
-package-lock.json
-scripts
+# Исходный код
+src/
+*.ts
+!dist/**/*.d.ts
+
+# Конфигурация разработки
 tsconfig.json
+.gitignore
+.npmignore
+
+# Примеры и документация
+example-*.json
+example-*.ts
+CHANGELOG.md
+
+# Временные файлы
+*.log
+.DS_Store

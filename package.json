@@ -4,13 +4,18 @@
   "description": "TypeScript common types for Gratio projects API responses and requests",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "gratio-generate-types": "./generate-types.js"
+  },
   "files": [
-    "dist"
+    "dist",
+    "generate-types.js"
   ],
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "generate-types": "node generate-types.js --help"
   },
   "author": "Gratio",
   "license": "MIT",

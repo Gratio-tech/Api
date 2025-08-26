@@ -1,7 +1,61 @@
-/.data
-/node_modules
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Generated types
+*-generated.ts
+*-generated.d.ts
+
+# Example files
+example-*.json
+example-*.ts
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# dotenv environment variables file
+.env
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+.editorconfig
 
 # Pulsar-editor plugin-config to load code on server (may content passwords)
 .sync.json
 
-.editorconfig
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
