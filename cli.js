@@ -735,5 +735,250 @@ systemCmd
     }
   });
 
+// Quick nutrition analysis command
+const quickNutritionCmd = program
+  .command('quick-nutrition <food>')
+  .description('Quick nutrition analysis with auto-approval')
+  .option('-a, --assistant-id <id>', 'Assistant ID or graph name', 'nutrition-agent')
+  .action(async (food, options) => {
+    try {
+      console.log(chalk.blue('🥗 Quick Nutrition Analysis'));
+      console.log(chalk.gray(`Analyzing: ${food}\n`));
+      
+      // Create thread
+      console.log(chalk.gray('Creating session...'));
+      const threadResponse = await api.post('/threads', {});
+      const threadId = threadResponse.data.thread_id;
+      
+      // Start analysis
+      console.log(chalk.gray('Starting analysis...'));
+      let response = await api.post(`/threads/${threadId}/runs/wait`, {
+        assistant_id: options.assistantId,
+        input: {
+          messages: [{ role: 'user', content: food }]
+        }
+      });
+      
+      // Auto-handle interrupts (approve confirmations, skip clarifications)
+      let maxIterations = 3;
+      let iteration = 0;
+      
+      while (response.data.__interrupt__ && iteration < maxIterations) {
+        iteration++;
+        const interrupt = response.data.__interrupt__[0];
+        const interruptType = interrupt.value.type;
+        
+        console.log(chalk.yellow(`\n🔔 ${interrupt.value.message}`));
+        
+        if (interruptType === 'confirmation') {
+          console.log(chalk.green('Auto-approving...'));
+          response = await api.post(`/threads/${threadId}/runs/wait`, {
+            assistant_id: options.assistantId,
+            command: { resume: { confirmed: true } }
+          });
+        } else if (interruptType === 'clarification') {
+          console.log(chalk.red('❌ Missing information - cannot auto-complete.'));
+          console.log(chalk.gray('Try using the interactive mode: node cli.js nutrition'));
+          return;
+        }
+      }
+      
+      // Display results
+      if (response.data.final_result) {
+        const result = response.data.final_result;
+        console.log(chalk.green('\n✅ Analysis Complete!\n'));
+        
+        result.items?.forEach((item, index) => {
+          console.log(chalk.cyan(`${index + 1}. ${item.name} (${item.grams}g)`));
+          console.log(chalk.white(`   Calories: ${item.nutrition_total.kcal} kcal`));
+          console.log(chalk.white(`   Protein: ${item.nutrition_total.proteins}g`));
+          console.log(chalk.white(`   Fat: ${item.nutrition_total.fat}g`));
+          console.log(chalk.white(`   Carbs: ${item.nutrition_total.carbohydrates}g`));
+          console.log(chalk.gray(`   Confidence: ${(item.confidence_score * 100).toFixed(1)}%\n`));
+        });
+        
+        if (result.items?.length > 1) {
+          console.log(chalk.green('📊 TOTAL:'));
+          console.log(chalk.white(`   Calories: ${result.total_nutrition.kcal} kcal`));
+          console.log(chalk.white(`   Protein: ${result.total_nutrition.proteins}g`));
+          console.log(chalk.white(`   Fat: ${result.total_nutrition.fat}g`));
+          console.log(chalk.white(`   Carbs: ${result.total_nutrition.carbohydrates}g`));
+        }
+      } else {
+        console.log(chalk.red('❌ No results received'));
+      }
+      
+    } catch (error) {
+      console.error(chalk.red('❌ Error:'));
+      if (error.response) {
+        console.error(chalk.red(`Status: ${error.response.status}`));
+        console.error(chalk.red(`Message: ${JSON.stringify(error.response.data, null, 2)}`));
+      } else {
+        console.error(chalk.red(error.message));
+      }
+    }
+  });
+
+// Interactive nutrition analysis mode
+const interactiveCmd = program
+  .command('nutrition')
+  .description('Interactive nutrition analysis session')
+  .option('-a, --assistant-id <id>', 'Assistant ID or graph name', 'nutrition-agent')
+  .action(async (options) => {
+    const inquirer = require('inquirer');
+    
+    console.log(chalk.blue('🥗 Welcome to Interactive Nutrition Analysis!'));
+    console.log(chalk.gray('Type food items (e.g., "chicken breast 150g", "apple", "pasta with tomatoes")'));
+    console.log(chalk.gray('Type "exit" to quit\n'));
+
+    let currentThread = null;
+    
+    // Helper function to handle interrupts automatically
+    async function handleInterrupt(threadId, assistantId, interruptData) {
+      const interrupt = interruptData.__interrupt__[0];
+      const interruptType = interrupt.value.type;
+      
+      console.log(chalk.yellow(`\n🔔 ${interrupt.value.message}`));
+      
+      if (interruptType === 'confirmation') {
+        const choices = interrupt.value.options.map(opt => ({
+          name: opt.label,
+          value: opt.value
+        }));
+        
+        const { action } = await inquirer.prompt([{
+          type: 'list',
+          name: 'action',
+          message: 'What would you like to do?',
+          choices: choices
+        }]);
+        
+        let resumePayload;
+        if (action === 'approve') {
+          resumePayload = { confirmed: true };
+        } else {
+          const { feedback } = await inquirer.prompt([{
+            type: 'input',
+            name: 'feedback',
+            message: 'What changes do you need? (e.g., "change chicken to 200g")'
+          }]);
+          resumePayload = { confirmed: false, feedback };
+        }
+        
+        return await api.post(`/threads/${threadId}/runs/wait`, {
+          assistant_id: assistantId,
+          command: { resume: resumePayload }
+        });
+        
+      } else if (interruptType === 'clarification') {
+        console.log(chalk.red('Missing information:'));
+        interrupt.value.missing_fields?.forEach(field => {
+          console.log(chalk.red(`  • ${field}`));
+        });
+        
+        const { clarification } = await inquirer.prompt([{
+          type: 'input',
+          name: 'clarification',
+          message: 'Please provide the missing information:'
+        }]);
+        
+        return await api.post(`/threads/${threadId}/runs/wait`, {
+          assistant_id: assistantId,
+          command: { resume: clarification }
+        });
+      }
+    }
+    
+    // Helper function to display nutrition results
+    function displayResults(data) {
+      if (data.final_result) {
+        const result = data.final_result;
+        console.log(chalk.green('\n✅ Nutrition Analysis Complete!\n'));
+        
+        // Display individual items
+        result.items?.forEach((item, index) => {
+          console.log(chalk.cyan(`${index + 1}. ${item.name} (${item.grams}g)`));
+          console.log(chalk.white(`   Calories: ${item.nutrition_total.kcal} kcal`));
+          console.log(chalk.white(`   Protein: ${item.nutrition_total.proteins}g`));
+          console.log(chalk.white(`   Fat: ${item.nutrition_total.fat}g`));
+          console.log(chalk.white(`   Carbs: ${item.nutrition_total.carbohydrates}g`));
+          console.log(chalk.gray(`   Confidence: ${(item.confidence_score * 100).toFixed(1)}%\n`));
+        });
+        
+        // Display totals
+        if (result.items?.length > 1) {
+          console.log(chalk.green('📊 TOTAL NUTRITION:'));
+          console.log(chalk.white(`   Calories: ${result.total_nutrition.kcal} kcal`));
+          console.log(chalk.white(`   Protein: ${result.total_nutrition.proteins}g`));
+          console.log(chalk.white(`   Fat: ${result.total_nutrition.fat}g`));
+          console.log(chalk.white(`   Carbs: ${result.total_nutrition.carbohydrates}g`));
+          console.log(chalk.gray(`   Total weight: ${result.total_grams}g\n`));
+        }
+      }
+    }
+    
+    while (true) {
+      try {
+        const { foodInput } = await inquirer.prompt([{
+          type: 'input',
+          name: 'foodInput',
+          message: chalk.green('🍎 Enter food items:'),
+          validate: (input) => input.trim().length > 0 || 'Please enter some food items'
+        }]);
+        
+        if (foodInput.toLowerCase() === 'exit') {
+          console.log(chalk.blue('👋 Goodbye!'));
+          break;
+        }
+        
+        // Create new thread if needed
+        if (!currentThread) {
+          console.log(chalk.gray('Creating new session...'));
+          const threadResponse = await api.post('/threads', {});
+          currentThread = threadResponse.data.thread_id;
+          console.log(chalk.gray(`Session ID: ${currentThread}\n`));
+        }
+        
+        console.log(chalk.gray('Analyzing nutrition...'));
+        
+        // Start nutrition analysis
+        let response = await api.post(`/threads/${currentThread}/runs/wait`, {
+          assistant_id: options.assistantId,
+          input: {
+            messages: [{ role: 'user', content: foodInput }]
+          }
+        });
+        
+        // Handle interrupts in a loop until we get final results
+        let maxIterations = 5;
+        let iteration = 0;
+        
+        while (response.data.__interrupt__ && iteration < maxIterations) {
+          iteration++;
+          console.log(chalk.yellow(`\n--- Iteration ${iteration} ---`));
+          response = await handleInterrupt(currentThread, options.assistantId, response.data);
+        }
+        
+        if (iteration >= maxIterations) {
+          console.log(chalk.red('❌ Maximum iterations reached. Please try a simpler query.'));
+          continue;
+        }
+        
+        // Display results
+        displayResults(response.data);
+        
+      } catch (error) {
+        console.error(chalk.red('\n❌ Error occurred:'));
+        if (error.response) {
+          console.error(chalk.red(`Status: ${error.response.status}`));
+          console.error(chalk.red(`Message: ${JSON.stringify(error.response.data, null, 2)}`));
+        } else {
+          console.error(chalk.red(error.message));
+        }
+        console.log(chalk.gray('You can try again or type "exit" to quit.\n'));
+      }
+    }
+  });
+
 // Parse command line arguments
 program.parse();
