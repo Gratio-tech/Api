@@ -1,332 +1,313 @@
-# @gratio/api
+# LangGraph API Tester
 
-TypeScript типы для API ответов и запросов в проектах Gratio. Пакет предоставляет базовые типы для работы с API и включает в себя скрипт для автоматической генерации типов из OpenAPI спецификаций.
-
-## Возможности
-- **Базовые типы API**: `ApiResponse<T>`, `ApiSuccessResponse<T>`, `ApiErrorResponse`
-- **Автоматическая генерация типов**: Скрипт для создания TypeScript типов из OpenAPI схем
-- **Гибкость источников**: Поддержка URL и локальных файлов схем
-- **Готовность к продакшену**: Типизированные ответы с обработкой ошибок
+CLI tool для тестирования LangGraph API по адресу `http://147.45.231.108:2024`.
 
 ## Установка
-```bash
-npm install @gratio/api
-# Для использования шифрованных запросов:
-npm install @gratio/crypt
-```
-
-## Быстрый старт
-
-### Использование базовых типов
-
-```typescript
-import type { ApiResponse } from '@gratio/api';
-
-const response: ApiResponse<string> = {
-  success: true,
-  data: "Hello World"
-};
-```
-
-### Генерация типов для проекта
-
-```bash
-# Использование npx (не требует установки)
-npx @gratio/api generate-types --url https://api.example.com/openapi.json
-
-# Глобальная установка для постоянного использования
-npm install -g @gratio/api
-gratio-generate-types --url https://api.example.com/openapi.json
-
-# Генерация из локального файла схемы
-npx @gratio/api generate-types --file ./api/schema.json
-```
-
-## Доступные типы
-
-### Основные типы API
-- `ApiResponse<T>` - Общий тип ответа API
-- `ApiSuccessResponse<T>` - Успешный ответ с данными
-- `ApiErrorResponse` - Ответ с ошибкой
-
-### Типы для шифрованных данных
-- `CryptedData` - Структура шифрованных данных
-- `ApiResponseCrypted` - Ответ с шифрованными данными
-
-## Использование типов
-
-```typescript
-import type { ApiResponse, ApiSuccessResponse, ApiErrorResponse } from '@gratio/api';
-
-// Если планируется использовать шифрованное апи в проекте
-import type { CryptedData, ApiResponseCrypted } from '@gratio/crypt';
-
-// Типизация ответа API
-const response: ApiResponse<string> = {
-  success: true,
-  data: "Hello World"
-};
-
-// Типизация шифрованного ответа
-// Фактически это ApiResponse<CryptedData>
-const cryptedResponse: ApiResponseCrypted = {
-  success: true,
-  data: {
-    v: "vector",
-    data: "encrypted_data"
-  }
-};
-
-// Получение зашифрованных данных
-async getEncryptedData(): Promise<ApiResponseCrypted> {
-  const response = await fetch(`${baseUrl}/secure-api`);
-  return response.json();
-}
-```
-
-## Генерация типов для конкретных проектов
-
-Для получения типов конкретного проекта используйте встроенный скрипт генерации типов:
-
-```bash
-# Установка глобально
-npm install -g @gratio/api
-gratio-generate-types --url https://api.example.com/openapi.json
-
-# Без установки
-npx @gratio/api generate-types --url https://api.example.com/openapi.json
-```
-
-## Опции скрипта генерации
-
-| Опция | Короткая | Описание | Пример |
-|-------|----------|----------|---------|
-| `--url` | `-u` | URL к OpenAPI спецификации | `--url https://api.example.com/openapi.json` |
-| `--file` | `-f` | Путь к локальному файлу схемы | `--file ./schema.json` |
-| `--output` | `-o` | Путь для выходного файла | `--output ./src/types/api.ts` |
-| `--format` | `--fmt` | Формат выходного файла | `--format json` |
-| `--help` | `-h` | Показать справку | `--help` |
-
-### Примеры команд:
-
-```bash
-# Генерация из URL (основной способ использования)
-npx @gratio/api generate-types --url https://api.example.com/openapi.json
-
-# Генерация из локального файла
-npx @gratio/api generate-types --file ./api/schema.json
-
-# Указание выходного файла (по умолчанию: ./generated-types.ts)
-npx @gratio/api generate-types --url https://api.example.com/openapi.json --output ./types/api.ts
-
-# Генерация в формате JSON (для отладки)
-npx @gratio/api generate-types --file ./schema.json --format json --output ./schema-debug.json
-
-# Справка по использованию
-npx @gratio/api generate-types --help
-```
-
-### Интеграция в проект
-
-Добавьте скрипт в ваш `package.json` для автоматической генерации типов:
-
-```json
-{
-  "scripts": {
-    "generate-types": "npx @gratio/api generate-types --url https://your-api.example.com/openapi.json --output ./generated/api.ts",
-    "build": "npm run generate-types && tsc"
-  }
-}
-```
-
-Теперь вы можете генерировать типы командой:
-```bash
-npm run generate-types
-```
-
-## Использование сгенерированных типов в коде
-
-   ```typescript
-   import type { ApiResponse } from '@gratio/api';
-   import type { User, CreateUserRequest } from './types/api';
-
-   const createUser = async (userData: CreateUserRequest): Promise<ApiResponse<User>> => {
-     const response = await fetch('/api/users', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify(userData)
-     });
-     return response.json();
-   };
-   ```
-
-### Типизация API клиента
-
-```typescript
-import type { ApiResponse, ApiResponseCrypted } from '@gratio/api';
-import type { User, Product, CreateOrderRequest, Order } from './types/api'; // Сгенерированные типы
-
-class ApiClient {
-  private baseUrl: string;
-
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
-  }
-
-  // Получение пользователей
-  async getUsers(): Promise<ApiResponse<User[]>> {
-    const response = await fetch(`${this.baseUrl}/users`);
-    return response.json();
-  }
-
-  // Создание заказа
-  async createOrder(orderData: CreateOrderRequest): Promise<ApiResponse<Order>> {
-    const response = await fetch(`${this.baseUrl}/orders`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData)
-    });
-    return response.json();
-  }
-
-  // Получение зашифрованных данных
-  async getEncryptedData(): Promise<ApiResponseCrypted> {
-    const response = await fetch(`${this.baseUrl}/secure-api`);
-    return response.json();
-  }
-}
-```
-
-### Обработка ошибок
-
-```typescript
-function handleApiResponse<T>(response: ApiResponse<T>): T {
-  if (response.success) {
-    return response.data!;
-  } else {
-    const errorMessage = Array.isArray(response.errors)
-      ? response.errors.join(', ')
-      : response.errors;
-
-    throw new Error(`API Error: ${errorMessage}`);
-  }
-}
-
-// Использование
-try {
-  const data = handleApiResponse(await apiClient.getEncryptedData());
-  console.log('Success:', data);
-} catch (error) {
-  console.error('API call failed:', error.message);
-}
-```
-
-### Типизация с дженериками
-
-```typescript
-// Создание типизированного API клиента
-class TypedApiClient<T> {
-  constructor(private baseUrl: string) {}
-
-  async get<TResponse>(endpoint: string): Promise<ApiResponse<TResponse>> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`);
-    return response.json();
-  }
-
-  async post<TRequest, TResponse>(
-    endpoint: string,
-    data: TRequest
-  ): Promise<ApiResponse<TResponse>> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return response.json();
-  }
-}
-
-// Использование
-const client = new TypedApiClient('http://localhost:3000');
-
-// Типизированные вызовы
-const encryptedData = await client.get<CryptedData>('/secure-api');
-const leadResult = await client.post<{ id: string }, { leadID: string }>(
-  '/secure-api/addLeadByID',
-  { id: '123' }
-);
-```
-
-#### Пример package.json scripts для проекта
-
-```json
-{
-  "scripts": {
-    "types:generate": "npx @gratio/api generate-types --url https://api.example.com/openapi.json --output ./generated/api.ts",
-    "types:generate:local": "npx @gratio/api generate-types --file ./schema.json --output ./generated/api.ts",
-    "prebuild": "npm run types:generate",
-    "build": "tsc",
-    "dev": "npm run types:generate && npm run dev:start"
-  }
-}
-```
-
-## Разработка
-
-```bash
-# Установка зависимостей
-npm install
-
-# Сборка
-npm run build
-
-# Показать справку по генерации типов
-npm run generate-types
-```
-
-## Основные принципы разработки
-
-### 1. Обратная совместимость
-
-- Не удалять существующие типы
-- Добавлять новые типы как опциональные
-- Использовать union типы для расширения
-
-### 2. Документация
-
-- Поддерживаем актуальность README
-- Добавляем примеры использования при обновлении
-- Описывать breaking changes
-
-## Публикация пакета
-
-### 1. Подготовка к публикации
 
 ```bash
 npm install
-npm run build
 ```
 
-### 2. Проверка содержимого
+## Использование
 
 ```bash
-npm pack --dry-run
+node cli.js [command] [options]
 ```
 
-### 3. Публикация
+или сделать исполняемым:
 
 ```bash
-npm login
-npm publish
+chmod +x cli.js
+./cli.js [command] [options]
 ```
 
-### 4. Обновление версии
+## Команды
 
+### Система
+
+#### Проверка здоровья системы
 ```bash
-npm version patch  # или minor, major
-npm publish
+node cli.js system health
+node cli.js system health --check-db
 ```
 
-## Лицензия
+#### Информация о сервере
+```bash
+node cli.js system info
+```
 
-MIT
+#### Метрики системы
+```bash
+node cli.js system metrics
+node cli.js system metrics --format json
+```
+
+### Ассистенты
+
+#### Создать ассистента
+```bash
+# Простое создание
+node cli.js assistant create
+
+# С параметрами
+node cli.js assistant create \
+  --name "My Assistant" \
+  --description "Test assistant" \
+  --config '{"recursion_limit": 50}' \
+  --metadata '{"version": "1.0"}'
+```
+
+#### Получить ассистента по ID
+```bash
+node cli.js assistant get <assistant-id>
+```
+
+#### Список ассистентов
+```bash
+node cli.js assistant list
+node cli.js assistant list --limit 20 --offset 10
+node cli.js assistant list --graph-id nutrition-agent
+node cli.js assistant list --sort-by created_at --sort-order desc
+```
+
+#### Обновить ассистента
+```bash
+node cli.js assistant update <assistant-id> \
+  --name "Updated Assistant" \
+  --description "Updated description"
+```
+
+#### Удалить ассистента
+```bash
+node cli.js assistant delete <assistant-id>
+```
+
+#### Получить граф ассистента
+```bash
+node cli.js assistant graph <assistant-id>
+node cli.js assistant graph <assistant-id> --xray
+node cli.js assistant graph <assistant-id> --xray 2
+```
+
+#### Получить схемы ассистента
+```bash
+node cli.js assistant schemas <assistant-id>
+```
+
+### Потоки (Threads)
+
+#### Создать поток
+```bash
+# Простое создание
+node cli.js thread create
+
+# С параметрами
+node cli.js thread create \
+  --thread-id "my-thread-id" \
+  --metadata '{"user": "test"}' \
+  --ttl-minutes 60
+```
+
+#### Получить поток по ID
+```bash
+node cli.js thread get <thread-id>
+```
+
+#### Список потоков
+```bash
+node cli.js thread list
+node cli.js thread list --status idle --limit 20
+node cli.js thread list --metadata '{"user": "test"}'
+```
+
+#### Обновить поток
+```bash
+node cli.js thread update <thread-id> \
+  --metadata '{"updated": true}'
+```
+
+#### Удалить поток
+```bash
+node cli.js thread delete <thread-id>
+```
+
+#### Получить состояние потока
+```bash
+node cli.js thread state <thread-id>
+node cli.js thread state <thread-id> --subgraphs
+```
+
+#### Обновить состояние потока
+```bash
+node cli.js thread update-state <thread-id> \
+  --values '{"key": "value"}' \
+  --as-node "node_name"
+```
+
+#### История потока
+```bash
+node cli.js thread history <thread-id>
+node cli.js thread history <thread-id> --limit 20
+```
+
+### Запуски (Runs)
+
+#### Создать фоновый запуск
+```bash
+node cli.js run create <thread-id> \
+  --assistant-id <assistant-id> \
+  --input '{"message": "Hello"}' \
+  --metadata '{"test": true}'
+```
+
+#### Создать запуск без состояния
+```bash
+node cli.js run create-stateless \
+  --assistant-id <assistant-id> \
+  --input '{"message": "Hello"}' \
+  --on-completion keep
+```
+
+#### Создать запуск и ждать завершения
+```bash
+node cli.js run wait <thread-id> \
+  --assistant-id <assistant-id> \
+  --input '{"message": "Hello"}'
+```
+
+#### Создать запуск без состояния и ждать завершения
+```bash
+node cli.js run wait-stateless \
+  --assistant-id <assistant-id> \
+  --input '{"message": "Hello"}'
+```
+
+#### Получить запуск по ID
+```bash
+node cli.js run get <thread-id> <run-id>
+```
+
+#### Список запусков для потока
+```bash
+node cli.js run list <thread-id>
+node cli.js run list <thread-id> --status running --limit 20
+```
+
+#### Отменить запуск
+```bash
+node cli.js run cancel <thread-id> <run-id>
+node cli.js run cancel <thread-id> <run-id> --action rollback --wait
+```
+
+#### Удалить запуск
+```bash
+node cli.js run delete <thread-id> <run-id>
+```
+
+### Хранилище (Store)
+
+#### Сохранить элемент
+```bash
+node cli.js store put \
+  --key "my-key" \
+  --value '{"data": "value"}' \
+  --namespace "ns1,ns2"
+```
+
+#### Получить элемент
+```bash
+node cli.js store get "my-key"
+node cli.js store get "my-key" --namespace "ns1,ns2"
+```
+
+#### Удалить элемент
+```bash
+node cli.js store delete "my-key"
+node cli.js store delete "my-key" --namespace "ns1,ns2"
+```
+
+#### Поиск элементов
+```bash
+node cli.js store search
+node cli.js store search --namespace-prefix "ns1,ns2" --limit 20
+node cli.js store search --filter '{"type": "document"}' --query "search text"
+```
+
+#### Список пространств имен
+```bash
+node cli.js store namespaces
+node cli.js store namespaces --prefix "ns1" --max-depth 3
+```
+
+## Примеры полного workflow
+
+### 1. Создание и тестирование ассистента
+```bash
+# Создать ассистента
+node cli.js assistant create --name "Test Assistant"
+
+# Получить ID из ответа и использовать его
+ASSISTANT_ID="<полученный-id>"
+
+# Получить информацию об ассистенте
+node cli.js assistant get $ASSISTANT_ID
+
+# Получить схемы
+node cli.js assistant schemas $ASSISTANT_ID
+```
+
+### 2. Работа с потоками и запусками
+```bash
+# Создать поток
+node cli.js thread create --metadata '{"test": "workflow"}'
+
+# Получить ID потока из ответа
+THREAD_ID="<полученный-id>"
+
+# Создать и выполнить запуск
+node cli.js run wait $THREAD_ID \
+  --assistant-id $ASSISTANT_ID \
+  --input '{"message": "Hello, world!"}'
+
+# Посмотреть историю потока
+node cli.js thread history $THREAD_ID
+```
+
+### 3. Работа с хранилищем
+```bash
+# Сохранить данные
+node cli.js store put \
+  --key "config" \
+  --value '{"setting": "value"}' \
+  --namespace "app,settings"
+
+# Получить данные
+node cli.js store get "config" --namespace "app,settings"
+
+# Найти все элементы в пространстве имен
+node cli.js store search --namespace-prefix "app"
+```
+
+## Формат ответов
+
+Все команды возвращают JSON-ответы в читаемом формате. Успешные операции отображаются зеленым цветом, ошибки - красным.
+
+## Обработка ошибок
+
+CLI автоматически обрабатывает ошибки API и показывает:
+- Статус код ошибки
+- Сообщение об ошибке
+- Детали ошибки в JSON формате
+
+## Требования
+
+- Node.js 14+
+- npm
+
+## Зависимости
+
+- `axios` - для HTTP запросов
+- `commander` - для парсинга аргументов CLI
+- `chalk` - для цветного вывода
+- `uuid` - для генерации UUID
+- `inquirer` - для интерактивных промптов (зарезервировано для будущих версий)
