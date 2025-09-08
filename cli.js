@@ -742,7 +742,7 @@ const quickNutritionCmd = program
   .option('-a, --assistant-id <id>', 'Assistant ID or graph name', 'nutrition-agent')
   .action(async (food, options) => {
     try {
-      console.log(chalk.blue('🥗 Quick Nutrition Analysis'));
+      console.log(chalk.blue('Quick Nutrition Analysis'));
       console.log(chalk.gray(`Analyzing: ${food}\n`));
       
       // Create thread
@@ -768,7 +768,7 @@ const quickNutritionCmd = program
         const interrupt = response.data.__interrupt__[0];
         const interruptType = interrupt.value.type;
         
-        console.log(chalk.yellow(`\n🔔 ${interrupt.value.message}`));
+        console.log(chalk.yellow(`\n${interrupt.value.message}`));
         
         if (interruptType === 'confirmation') {
           console.log(chalk.green('Auto-approving...'));
@@ -777,7 +777,7 @@ const quickNutritionCmd = program
             command: { resume: { confirmed: true } }
           });
         } else if (interruptType === 'clarification') {
-          console.log(chalk.red('❌ Missing information - cannot auto-complete.'));
+          console.log(chalk.red('Missing information - cannot auto-complete.'));
           console.log(chalk.gray('Try using the interactive mode: node cli.js nutrition'));
           return;
         }
@@ -786,7 +786,7 @@ const quickNutritionCmd = program
       // Display results
       if (response.data.final_result) {
         const result = response.data.final_result;
-        console.log(chalk.green('\n✅ Analysis Complete!\n'));
+        console.log(chalk.green('\nAnalysis Complete!\n'));
         
         result.items?.forEach((item, index) => {
           console.log(chalk.cyan(`${index + 1}. ${item.name} (${item.grams}g)`));
@@ -798,18 +798,18 @@ const quickNutritionCmd = program
         });
         
         if (result.items?.length > 1) {
-          console.log(chalk.green('📊 TOTAL:'));
+          console.log(chalk.green('TOTAL:'));
           console.log(chalk.white(`   Calories: ${result.total_nutrition.kcal} kcal`));
           console.log(chalk.white(`   Protein: ${result.total_nutrition.proteins}g`));
           console.log(chalk.white(`   Fat: ${result.total_nutrition.fat}g`));
           console.log(chalk.white(`   Carbs: ${result.total_nutrition.carbohydrates}g`));
         }
       } else {
-        console.log(chalk.red('❌ No results received'));
+        console.log(chalk.red('No results received'));
       }
       
     } catch (error) {
-      console.error(chalk.red('❌ Error:'));
+      console.error(chalk.red('Error:'));
       if (error.response) {
         console.error(chalk.red(`Status: ${error.response.status}`));
         console.error(chalk.red(`Message: ${JSON.stringify(error.response.data, null, 2)}`));
@@ -827,7 +827,7 @@ const interactiveCmd = program
   .action(async (options) => {
     const inquirer = require('inquirer');
     
-    console.log(chalk.blue('🥗 Welcome to Interactive Nutrition Analysis!'));
+    console.log(chalk.blue('Welcome to Interactive Nutrition Analysis!'));
     console.log(chalk.gray('Type food items (e.g., "chicken breast 150g", "apple", "pasta with tomatoes")'));
     console.log(chalk.gray('Type "exit" to quit\n'));
 
@@ -838,11 +838,37 @@ const interactiveCmd = program
       const interrupt = interruptData.__interrupt__[0];
       const interruptType = interrupt.value.type;
       
-      console.log(chalk.yellow(`\n🔔 ${interrupt.value.message}`));
+      console.log(chalk.yellow(`\n${interrupt.value.message}`));
       
       if (interruptType === 'confirmation') {
+        // Display parsed data for review
+        if (interrupt.value.parsed_data) {
+          console.log(chalk.cyan('\nParsed food data:'));
+          
+          if (interrupt.value.parsed_data.products?.length > 0) {
+            console.log(chalk.white('Products:'));
+            interrupt.value.parsed_data.products.forEach(product => {
+              console.log(chalk.gray(`  ${product.index}. ${product.name} - ${product.grams}g`));
+            });
+          }
+          
+          if (interrupt.value.parsed_data.dishes?.length > 0) {
+            console.log(chalk.white('Dishes:'));
+            interrupt.value.parsed_data.dishes.forEach(dish => {
+              console.log(chalk.gray(`  ${dish.index}. ${dish.name}`));
+              if (dish.ingredients?.length > 0) {
+                dish.ingredients.forEach(ingredient => {
+                  console.log(chalk.gray(`    - ${ingredient.name}: ${ingredient.grams}g`));
+                });
+              }
+            });
+          }
+          
+          console.log(chalk.white(`Total items: ${interrupt.value.parsed_data.total_items}\n`));
+        }
+        
         const choices = interrupt.value.options.map(opt => ({
-          name: opt.label,
+          name: opt.label.replace(/[^\w\s-]/g, ''), // Remove emojis
           value: opt.value
         }));
         
@@ -873,7 +899,7 @@ const interactiveCmd = program
       } else if (interruptType === 'clarification') {
         console.log(chalk.red('Missing information:'));
         interrupt.value.missing_fields?.forEach(field => {
-          console.log(chalk.red(`  • ${field}`));
+          console.log(chalk.red(`  - ${field}`));
         });
         
         const { clarification } = await inquirer.prompt([{
@@ -893,7 +919,7 @@ const interactiveCmd = program
     function displayResults(data) {
       if (data.final_result) {
         const result = data.final_result;
-        console.log(chalk.green('\n✅ Nutrition Analysis Complete!\n'));
+        console.log(chalk.green('\nNutrition Analysis Complete!\n'));
         
         // Display individual items
         result.items?.forEach((item, index) => {
@@ -907,7 +933,7 @@ const interactiveCmd = program
         
         // Display totals
         if (result.items?.length > 1) {
-          console.log(chalk.green('📊 TOTAL NUTRITION:'));
+          console.log(chalk.green('TOTAL NUTRITION:'));
           console.log(chalk.white(`   Calories: ${result.total_nutrition.kcal} kcal`));
           console.log(chalk.white(`   Protein: ${result.total_nutrition.proteins}g`));
           console.log(chalk.white(`   Fat: ${result.total_nutrition.fat}g`));
@@ -922,12 +948,12 @@ const interactiveCmd = program
         const { foodInput } = await inquirer.prompt([{
           type: 'input',
           name: 'foodInput',
-          message: chalk.green('🍎 Enter food items:'),
+          message: chalk.green('Enter food items:'),
           validate: (input) => input.trim().length > 0 || 'Please enter some food items'
         }]);
         
         if (foodInput.toLowerCase() === 'exit') {
-          console.log(chalk.blue('👋 Goodbye!'));
+          console.log(chalk.blue('Goodbye!'));
           break;
         }
         
@@ -960,7 +986,7 @@ const interactiveCmd = program
         }
         
         if (iteration >= maxIterations) {
-          console.log(chalk.red('❌ Maximum iterations reached. Please try a simpler query.'));
+          console.log(chalk.red('Maximum iterations reached. Please try a simpler query.'));
           continue;
         }
         
@@ -968,7 +994,7 @@ const interactiveCmd = program
         displayResults(response.data);
         
       } catch (error) {
-        console.error(chalk.red('\n❌ Error occurred:'));
+        console.error(chalk.red('\nError occurred:'));
         if (error.response) {
           console.error(chalk.red(`Status: ${error.response.status}`));
           console.error(chalk.red(`Message: ${JSON.stringify(error.response.data, null, 2)}`));

@@ -3,11 +3,11 @@
 CLI tool для тестирования LangGraph API по адресу `http://147.45.231.108:2024`.
 
 Особенности:
-- 🥗 **Интерактивный анализ питания** - простой режим для тестирования nutrition-агента
-- ⚡ **Быстрый анализ** - автоматическое подтверждение для простых запросов  
-- 🔧 **Полный API доступ** - все операции с ассистентами, потоками, запусками и хранилищем
-- 🎨 **Красивый вывод** - цветной интерфейс с эмодзи и структурированными результатами
-- 🤖 **Автоматическая обработка HITL** - умная обработка прерываний и подтверждений
+- **Интерактивный анализ питания** - простой режим для тестирования nutrition-агента
+- **Быстрый анализ** - автоматическое подтверждение для простых запросов  
+- **Полный API доступ** - все операции с ассистентами, потоками, запусками и хранилищем
+- **Красивый вывод** - цветной интерфейс и структурированные результаты
+- **Автоматическая обработка HITL** - умная обработка прерываний и подтверждений
 
 ## Установка
 
@@ -63,20 +63,28 @@ node cli.js nutrition
 ```bash
 $ node cli.js nutrition
 
-🥗 Welcome to Interactive Nutrition Analysis!
+Welcome to Interactive Nutrition Analysis!
 Type food items (e.g., "chicken breast 150g", "apple", "pasta with tomatoes")
 Type "exit" to quit
 
-🍎 Enter food items: chicken breast 150g
+Enter food items: chicken breast 150g
 Creating new session...
 Session ID: abc123-def4-5678-9012-345678901234
 
 Analyzing nutrition...
 
-🔔 Please review the parsed food data and confirm if it's correct:
-? What would you like to do? ✅ Correct - proceed with nutrition analysis
+--- Iteration 1 ---
 
-✅ Nutrition Analysis Complete!
+Please review the parsed food data and confirm if it's correct:
+
+Parsed food data:
+Products:
+  1. chicken breast - 150g
+Total items: 1
+
+? What would you like to do? Correct - proceed with nutrition analysis
+
+Nutrition Analysis Complete!
 
 1. Chicken Breast (150g)
    Calories: 248 kcal
@@ -85,7 +93,7 @@ Analyzing nutrition...
    Carbs: 0g
    Confidence: 95.0%
 
-🍎 Enter food items: apple, banana 120g
+Enter food items: apple, banana 120g
 Analyzing nutrition...
 ...
 ```
