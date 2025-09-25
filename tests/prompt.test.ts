@@ -9,6 +9,9 @@ describe('CLI prompt utils', () => {
     });
 
     it('should return true if prompt is not false', () => {
+      if (process.env.CI) delete process.env.CI;
+      if (process.env.NODE_ENV) delete process.env.NODE_ENV;
+
       expect(canPrompt({ prompt: true })).toBe(true);
       expect(canPrompt({})).toBe(true);
     });
