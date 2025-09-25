@@ -17,8 +17,7 @@ export async function getSpecLink(args: Record<string, unknown>, envName: string
     process.exit(0);
   }
 
-  const specLink =
-    args.link ?? process.env[envName] ?? (await rl.question('Please enter the link to the OpenAPI spec (GRATIO_TYPES_LINK): '));
+  const specLink = args.link ?? process.env[envName] ?? (await rl.question(`Please enter the link to the OpenAPI spec (${envName}): `));
 
   rl.close();
 
@@ -39,7 +38,7 @@ export async function getToken(args: Record<string, unknown>, envName: string): 
   const token =
     args.token ??
     process.env[envName] ??
-    (await rl.question('PAT is required. Please enter your Personal Access Token for GitLab or GitHub (GRATIO_TYPES_TOKEN): '));
+    (await rl.question(`PAT is required. Please enter your Personal Access Token for GitLab or GitHub (${envName}): `));
 
   rl.close();
 
