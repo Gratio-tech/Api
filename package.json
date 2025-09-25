@@ -29,6 +29,10 @@
     "test:publish": "npm publish --dry-run"
   },
   "author": "Gratio",
+  "contributors": [
+    "domin-mnd <dominnya@gmail.com>",
+    "genadich <ex-er-sis@ya.ru>"
+  ],
   "license": "MIT",
   "dependencies": {
     "openapi-typescript": "^7.9.1"
