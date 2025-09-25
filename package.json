@@ -23,7 +23,9 @@
     "build": "tsup",
     "dev": "tsup --watch --no-dts",
     "lint": "eslint .",
-    "prepare": "npm run build",
+    "style": "prettier --write src/**/*.{js,jsx,ts,tsx}",
+    "prepare": "bun run build",
+    "test": "bun test",
     "test:publish": "npm publish --dry-run"
   },
   "author": "Gratio",
