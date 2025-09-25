@@ -46,7 +46,7 @@ jobs:
         run: bun lint
 
       - name: Style / Prettier (format)
-        run: bun style
+        run: bun style:check
 
       - name: Tests (bun test)
         run: bun test
