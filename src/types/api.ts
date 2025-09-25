@@ -8,6 +8,4 @@ export type ApiErrorResponse = {
   errors: string | string[] | { [key: string]: string }[]; // Массив объектов на случай ошибок валидации - удобно использовать ключи объекта для полей
 };
 
-export type ApiResponse<T = unknown> =
-  | ApiSuccessResponse<T>
-  | ApiErrorResponse;
+export type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;

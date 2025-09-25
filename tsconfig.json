@@ -3,10 +3,8 @@
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "node",
-    "declaration": true,
-    "declarationMap": true,
+    "declaration": false,
     "outDir": "./dist",
-    "rootDir": "./",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -14,13 +12,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
-    "emitDeclarationOnly": false
+    "emitDeclarationOnly": false,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"]
+    }
   },
-  "include": [
-    "*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["**/*"],
+  "exclude": ["node_modules", "dist"]
 }
