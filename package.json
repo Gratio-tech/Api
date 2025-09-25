@@ -16,8 +16,7 @@
   "types": "dist/index.d.ts",
   "bin": "dist/cli.js",
   "files": [
-    "dist",
-    "generate-types.js"
+    "dist"
   ],
   "scripts": {
     "build": "tsup",
