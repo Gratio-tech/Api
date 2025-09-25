@@ -50,8 +50,8 @@ export async function getSpecContents(url: string, args: Record<string, unknown>
   const rawUrl = url.includes('/-/blob/')
     ? url.replace('/-/blob/', '/-/raw/')
     : url.includes('/blob/')
-    ? url.replace('/blob/', '/raw/')
-    : url;
+      ? url.replace('/blob/', '/raw/')
+      : url;
 
   const fetchWithPat = async (pat?: string) => {
     const headers: HeadersInit = {};

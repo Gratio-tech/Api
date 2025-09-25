@@ -22,8 +22,8 @@
     "build": "tsup",
     "dev": "tsup --watch --no-dts",
     "lint": "eslint .",
-    "style:check": "prettier --check src/**/*.{js,jsx,ts,tsx}",
-    "style": "prettier --write src/**/*.{js,jsx,ts,tsx}",
+    "style:check": "prettier --check src/**/*.ts",
+    "style": "prettier --write src/**/*.ts",
     "prepare": "bun run build",
     "test": "bun test",
     "test:publish": "npm publish --dry-run"
