@@ -47,13 +47,14 @@ export default defineCommand({
 
     // Defer import to speed up CLI startup time
     // TODO: Replace with modern syntax - https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-9.html#support-for-import-defer
-    const { astToString, default: openapiTS } = await import('openapi-typescript');
+    const openApiImport = import('openapi-typescript');
 
     try {
       const specLink = await getSpecLink(args, 'GRATIO_TYPES_LINK');
 
       const specContents = await getSpecContents(specLink, args, 'GRATIO_TYPES_TOKEN');
 
+      const { astToString, default: openapiTS } = await openApiImport;
       const ast = await openapiTS(specContents);
       const contents = astToString(ast);
 
