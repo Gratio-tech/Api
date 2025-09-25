@@ -14,12 +14,15 @@ export default defineConfig([
   },
   {
     entry: ['src/cli.ts'],
-    dts: false,
-    format: 'cjs',
-    treeshake: 'smallest',
-    outDir: './dist',
-    minify: 'terser',
-    target: 'es2020',
+    banner: { js: '#!/usr/bin/env node' },
+    esbuildOptions: options => {
+      options.outfile = 'dist/cli';
+      options.outdir = undefined;
+      options.minify = true;
+      options.format = 'cjs';
+      options.target = 'es2020';
+      options.treeShaking = true;
+    },
     external: ['readline'],
   },
 ]);

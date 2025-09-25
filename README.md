@@ -39,7 +39,7 @@ npx @gratio/api gen types --link https://api.example.com/openapi.json
 
 # Глобальная установка для постоянного использования
 npm install -g @gratio/api
-@gratio/api gen types --link https://api.example.com/openapi.json
+api gen types --link https://api.example.com/openapi.json
 
 # Генерация из локального файла схемы
 npx @gratio/api gen types --link ./api/schema.json
@@ -53,7 +53,7 @@ npx @gratio/api gen endpoints --link https://api.example.com/openapi.json
 
 # Глобальная установка для постоянного использования
 npm install -g @gratio/api
-@gratio/api gen endpoints --link https://api.example.com/openapi.json
+api gen endpoints --link https://api.example.com/openapi.json
 
 # Генерация из локального файла схемы
 npx @gratio/api gen endpoints --link ./api/schema.json
