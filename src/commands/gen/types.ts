@@ -1,6 +1,8 @@
+import { mkdirSync } from 'fs';
 import { writeFile } from 'fs/promises';
 
 import { defineCommand } from 'krosh';
+import { dirname } from 'path';
 
 import { isSilent } from '~/utils/cli/args';
 import { getSpecContents, getSpecLink } from '~/utils/cli/openApi';
@@ -66,6 +68,7 @@ export default defineCommand({
       }
 
       if (typeof outputPath === 'string') {
+        mkdirSync(dirname(outputPath), { recursive: true });
         await writeFile(outputPath, contents);
         console.info(`✓ ${outputPath}`);
       }
