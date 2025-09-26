@@ -35,6 +35,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "dotenv": "17.2.2",
     "openapi-typescript": "^7.9.1"
   },
   "devDependencies": {
