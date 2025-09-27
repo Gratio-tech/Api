@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch --no-dts",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "style:check": "prettier --check src/**/*.ts",
     "style": "prettier --write src/**/*.ts",
     "prepare": "bun run build",
