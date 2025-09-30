@@ -102,6 +102,9 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
 
+      - name: Show package.json tail
+        run: cat -A package.json | tail -20
+
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
