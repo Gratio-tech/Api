@@ -46,11 +46,7 @@ export async function getToken(args: Record<string, unknown>, envName: string): 
 }
 
 export async function getSpecContents(url: string, args: Record<string, unknown>, envName: string): Promise<string> {
-  const rawUrl = url.includes('/-/blob/')
-    ? url.replace('/-/blob/', '/-/raw/')
-    : url.includes('/blob/')
-      ? url.replace('/blob/', '/raw/')
-      : url;
+  const rawUrl = url.includes('/blob/') ? url.replace('/blob/', '/raw/') : url;
 
   const fetchWithPat = async (pat?: string) => {
     const headers: HeadersInit = {};
