@@ -1,0 +1,52 @@
+name: PR — lint · style · test
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+jobs:
+  pr-checks:
+    name: PR checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: pr-checks-${{ github.head_ref || github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun (official)
+        uses: oven-sh/setup-bun@v2
+
+      - name: Restore Bun global install cache
+        uses: actions/cache@v4
+        id: bun-cache
+        with:
+          path: ${{ env.HOME }}/.bun/install/cache
+          key: ${{ runner.os }}-bun-cache-${{ hashFiles('**/bun.lock','**/bun.lockb','**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-cache-
+
+      - name: Install dependencies (reproducible)
+        # bun ci == bun install --frozen-lockfile
+        run: bun ci
+
+      - name: Save Bun cache (if changed)
+        if: steps.bun-cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HOME }}/.bun/install/cache
+          key: ${{ runner.os }}-bun-cache-${{ hashFiles('**/bun.lock','**/bun.lockb','**/package.json') }}
+
+      - name: Lint (ESLint)
+        run: bun lint
+
+      - name: Style / Prettier (format)
+        run: bun style:check
+
+      - name: Tests (bun test)
+        run: bun test

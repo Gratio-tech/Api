@@ -1,0 +1,113 @@
+name: Publish package to npm (on push to main)
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-publish:
+    name: Test, build and publish
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun (official)
+        uses: oven-sh/setup-bun@v2
+
+      - name: Restore Bun global install cache
+        uses: actions/cache@v4
+        id: bun-cache
+        with:
+          path: ${{ env.HOME }}/.bun/install/cache
+          key: ${{ runner.os }}-bun-cache-${{ hashFiles('**/bun.lock','**/bun.lockb','**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-cache-
+
+      - name: Install dependencies (reproducible)
+        run: bun ci
+
+      - name: Save Bun cache (if changed)
+        if: steps.bun-cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HOME }}/.bun/install/cache
+          key: ${{ runner.os }}-bun-cache-${{ hashFiles('**/bun.lock','**/bun.lockb','**/package.json') }}
+
+      - name: Run tests
+        run: bun test
+
+      - name: Build (tsup)
+        run: bun run build
+
+      - name: Ensure package is not private
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
+            if (pkg.private) {
+              console.error('package.json.private is true — aborting publish');
+              process.exit(1);
+            }
+          "
+
+      - name: Compute short SHA
+        id: sha
+        run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Set version to BASE-SHORTSHA (e.g. 2.0.0-913bade)
+        id: set_version
+        run: |
+          node -e '
+            const fs = require("fs");
+            const pkgPath = "package.json";
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+            // base: take only X.Y.Z part (strip any prerelease part)
+            const base = String(pkg.version || "0.0.0").split("-")[0];
+            const sha = process.env.SHORT_SHA || "unknown";
+            const newVersion = `${base}-${sha}`;
+            if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z-]+)?$/.test(newVersion)) {
+              console.error("Computed version not semver:", newVersion);
+              process.exit(1);
+            }
+            pkg.version = newVersion;
+            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\\n");
+            console.log("Updated package.json version to", newVersion);
+          '
+        env:
+          SHORT_SHA: ${{ env.SHORT_SHA }}
+
+      - name: Show new version
+        run: node -e "console.log('version:', require('./package.json').version)"
+
+      - name: Setup Node (for npm publish)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Authenticate to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "Publishing $(node -e 'console.log(require(\"./package.json\").version)')..."
+          npm publish --access public
