@@ -90,14 +90,6 @@ jobs:
         env:
           SHORT_SHA: ${{ env.SHORT_SHA }}
 
-      - name: Show new version
-        run: |
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
-            console.log('New version: ', pkg.version)
-          "
-
       - name: Setup Node (for npm publish)
         uses: actions/setup-node@v4
         with:
