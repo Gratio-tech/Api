@@ -90,9 +90,6 @@ jobs:
         env:
           SHORT_SHA: ${{ env.SHORT_SHA }}
 
-      - name: Show new version
-        run: node -e "console.log('version:', require('./package.json').version)"
-
       - name: Setup Node (for npm publish)
         uses: actions/setup-node@v4
         with:
@@ -105,9 +102,10 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
 
+      - name: Show package.json tail
+        run: cat -A package.json | tail -20
+
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          echo "Publishing $(node -e 'console.log(require(\"./package.json\").version)')..."
-          npm publish --access public
+        run: npm publish --access public

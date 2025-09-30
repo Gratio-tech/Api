@@ -1,12 +1,17 @@
-# Исходный код
+# Исходный код и тесты
 src/
+tests/
 *.ts
 !dist/**/*.d.ts
 
-# Конфигурация разработки
+# Конфигурация разработки, конфиги линта
 tsconfig.json
+tsup.config.ts
 .gitignore
 .npmignore
+eslint.config.mjs
+bun.lock
+.github/
 
 # Примеры и документация
 example-*.json
