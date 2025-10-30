@@ -59,6 +59,31 @@ api gen endpoints --link https://api.example.com/openapi.json
 npx @gratio/api gen endpoints --link ./api/schema.json
 ```
 
+## Конфигурация через .env
+
+Если флаг `--link` не указан, CLI берёт значение из переменных окружения, которые автоматически подгружаются из файла `.env` в корне проекта (используется dotenv). Для команд действуют такие переменные:
+
+- Для `gen types`: `OPENAPI_TYPES_LINK`, `OPENAPI_TYPES_TOKEN`, `OPENAPI_TYPES_OUTPUT`
+- Для `gen endpoints`: `OPENAPI_ENDPOINTS_LINK`, `OPENAPI_ENDPOINTS_TOKEN`, `OPENAPI_ENDPOINTS_OUTPUT`
+
+Пример файла `.env`:
+
+```
+# OpenAPI источник (URL или локальный файл)
+OPENAPI_TYPES_LINK=https://api.example.com/openapi.json
+OPENAPI_ENDPOINTS_LINK=./api/schema.json
+
+# Токены доступа (нужны для приватных репозиториев GitHub/GitLab)
+OPENAPI_TYPES_TOKEN=ghp_your_token_here
+OPENAPI_ENDPOINTS_TOKEN=glpat_your_token_here
+
+# Куда писать результат (по умолчанию выводится в stdout)
+OPENAPI_TYPES_OUTPUT=src/types/api.ts
+OPENAPI_ENDPOINTS_OUTPUT=src/types/endpoints.ts
+```
+
+Примечание: если переменные не заданы и включены подсказки (`--prompt` по умолчанию), CLI спросит недостающие значения интерактивно. В CI/production режиме подсказки отключаются.
+
 ## Доступные типы
 
 ### Основные типы API
@@ -114,10 +139,12 @@ Generates types using OpenAPI 3 specification.
 Flags:
   -s, --silent     Suppresses all console output except errors.
   -p, --prompt     Whether to prompt for missing information like spec URL or PAT.
-  -l, --link       The URL to the OpenAPI specification (GRATIO_TYPES_LINK).
-  -P, --token      Personal Access Token with api scope (GRATIO_TYPES_TOKEN).
-  -o, --output     The output path for the generated types file (GRATIO_TYPES_OUTPUT).
+  -l, --link       The URL to the OpenAPI specification (OPENAPI_TYPES_LINK).
+  -P, --token      Personal Access Token with api scope (OPENAPI_TYPES_TOKEN).
+  -o, --output     The output path for the generated types file (OPENAPI_TYPES_OUTPUT).
 ```
+
+Примечание: значение для `--link` может быть как URL, так и путём к локальному файлу (например, `./api/schema.json`).
 
 ## `@gratio/api gen endpoints --help`
 
@@ -130,10 +157,12 @@ Generates endpoint enum with data from OpenAPI 3 specification.
 Flags:
   -s, --silent     Suppresses all console output except errors.
   -p, --prompt     Whether to prompt for missing information like spec URL or PAT.
-  -l, --link       The URL to the OpenAPI specification (GRATIO_ENDPOINTS_LINK).
-  -P, --token      Personal Access Token with api scope (GRATIO_ENDPOINTS_TOKEN).
-  -o, --output     The output path for the generated endpoint file (GRATIO_ENDPOINTS_OUTPUT).
+  -l, --link       The URL to the OpenAPI specification (OPENAPI_ENDPOINTS_LINK).
+  -P, --token      Personal Access Token with api scope (OPENAPI_ENDPOINTS_TOKEN).
+  -o, --output     The output path for the generated endpoint file (OPENAPI_ENDPOINTS_OUTPUT).
 ```
+
+Примечание: значение для `--link` может быть как URL, так и путём к локальному файлу (например, `./api/schema.json`).
 
 ## Лицензия
 

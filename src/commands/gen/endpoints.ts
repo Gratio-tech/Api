@@ -83,17 +83,17 @@ export default defineCommand({
     },
     link: {
       type: 'string',
-      description: 'The URL to the OpenAPI specification (GRATIO_ENDPOINTS_LINK).',
+      description: 'The URL to the OpenAPI specification (OPENAPI_ENDPOINTS_LINK).',
       short: 'l',
     },
     token: {
       type: 'string',
-      description: 'Personal Access Token with api scope (GRATIO_ENDPOINTS_TOKEN).',
+      description: 'Personal Access Token with api scope (OPENAPI_ENDPOINTS_TOKEN).',
       short: 'P',
     },
     output: {
       type: 'string',
-      description: 'The output path for the generated endpoint file (GRATIO_ENDPOINTS_OUTPUT).',
+      description: 'The output path for the generated endpoint file (OPENAPI_ENDPOINTS_OUTPUT).',
       short: 'o',
       default: 'stdout',
     },
@@ -106,13 +106,13 @@ export default defineCommand({
     }
 
     try {
-      const specLink = await getSpecLink(args, 'GRATIO_ENDPOINTS_LINK');
+      const specLink = await getSpecLink(args, 'OPENAPI_ENDPOINTS_LINK');
 
-      const specContents = await getSpecContents(specLink, args, 'GRATIO_ENDPOINTS_TOKEN');
+      const specContents = await getSpecContents(specLink, args, 'OPENAPI_ENDPOINTS_TOKEN');
       const spec = parseSpec(specContents);
       const paths = getPaths(spec);
 
-      const outputPath = args.output ?? process.env.GRATIO_ENDPOINTS_OUTPUT;
+      const outputPath = args.output ?? process.env.OPENAPI_ENDPOINTS_OUTPUT;
 
       const template = createTemplate(
         [
