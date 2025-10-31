@@ -25,17 +25,17 @@ export default defineCommand({
     },
     link: {
       type: 'string',
-      description: 'The URL to the OpenAPI specification (GRATIO_TYPES_LINK).',
+      description: 'The URL to the OpenAPI specification (OPENAPI_TYPES_LINK).',
       short: 'l',
     },
     token: {
       type: 'string',
-      description: 'Personal Access Token with api scope (GRATIO_TYPES_TOKEN).',
+      description: 'Personal Access Token with api scope (OPENAPI_TYPES_TOKEN).',
       short: 'P',
     },
     output: {
       type: 'string',
-      description: 'The output path for the generated types file (GRATIO_TYPES_OUTPUT).',
+      description: 'The output path for the generated types file (OPENAPI_TYPES_OUTPUT).',
       short: 'o',
       default: 'stdout',
     },
@@ -52,15 +52,15 @@ export default defineCommand({
     const openApiImport = import('openapi-typescript');
 
     try {
-      const specLink = await getSpecLink(args, 'GRATIO_TYPES_LINK');
+      const specLink = await getSpecLink(args, 'OPENAPI_TYPES_LINK');
 
-      const specContents = await getSpecContents(specLink, args, 'GRATIO_TYPES_TOKEN');
+      const specContents = await getSpecContents(specLink, args, 'OPENAPI_TYPES_TOKEN');
 
       const { astToString, default: openapiTS } = await openApiImport;
       const ast = await openapiTS(specContents);
       const contents = astToString(ast);
 
-      const outputPath = args.output ?? process.env.GRATIO_TYPES_OUTPUT;
+      const outputPath = args.output ?? process.env.OPENAPI_TYPES_OUTPUT;
 
       if (outputPath === 'stdout') {
         console.log(contents);
