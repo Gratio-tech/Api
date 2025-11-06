@@ -68,7 +68,9 @@ export default defineCommand({
       }
 
       if (typeof outputPath === 'string') {
-        mkdirSync(dirname(outputPath), { recursive: true });
+        const dirName = dirname(outputPath);
+        if (dirName !== '.') mkdirSync(dirName, { recursive: true });
+
         await writeFile(outputPath, contents);
         console.info(`✓ ${outputPath}`);
       }

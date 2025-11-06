@@ -128,6 +128,73 @@ async getEncryptedData(): Promise<ApiResponseCrypted> {
 }
 ```
 
+## Утилита: parseApiRequest
+
+`parseApiRequest` помогает собрать корректный `Request` для `fetch` из структурированного описания запроса: базовый URL, путь с параметрами, метод, заголовки, тело и query-параметры.
+
+Импорт:
+
+```ts
+import { parseApiRequest } from '@gratio/api';
+```
+
+### Пример: GET с path и query параметрами
+
+```ts
+const request = parseApiRequest({
+  baseUrl: 'https://api.example.com',
+  path: '/users/{id}',
+  method: 'get',
+  status: '200',
+  pathParams: { id: '123' },
+  queryParams: { search: 'john', limit: '10' },
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+const response = await fetch(request);
+const data = await response.json();
+```
+
+### Пример: POST с JSON-телом
+
+```ts
+type CreateUserDto = { name: string; email: string };
+
+const request = parseApiRequest({
+  baseUrl: 'https://api.example.com',
+  path: '/users',
+  method: 'post',
+  status: '201',
+  body: { name: 'John', email: 'john@example.com' } satisfies CreateUserDto,
+});
+
+const response = await fetch(request);
+```
+
+### Пример: POST с FormData
+
+```ts
+const form = new FormData();
+form.append('avatar', file);
+
+const request = parseApiRequest({
+  baseUrl: 'https://api.example.com',
+  path: '/users/{id}/avatar',
+  method: 'post',
+  status: '200',
+  pathParams: { id: '123' },
+  body: form, // Content-Type проставлять не нужно — браузер выставит boundary автоматически
+});
+
+await fetch(request);
+```
+
+Примечания:
+
+- Если указан `FormData`, заголовок `Content-Type` не добавляется вручную.
+- Для статус-кода `204` тело запроса не отправляется.
+- Путь может включать параметры вида `{id}` — они будут подставлены из `pathParams` с URL-экранированием. Query-параметры добавляются из `queryParams`.
+
 ## `@gratio/api gen types --help`
 
 ```
