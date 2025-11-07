@@ -1,6 +1,6 @@
 {
   "name": "@gratio/api",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "TypeScript common types for Gratio projects API responses and requests",
   "homepage": "https://github.com/Gratio-tech/Api#readme",
   "packageManager": "bun@1.2.17",
