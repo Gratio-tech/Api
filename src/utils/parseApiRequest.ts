@@ -7,7 +7,7 @@ interface ApiResponse {
 interface ApiRequest extends ApiResponse {
   baseUrl: string;
   headers?: Record<string, string>;
-  body?: Record<string, unknown>;
+  body?: Record<string, unknown> | FormData;
   queryParams?: Record<string, string>;
   pathParams?: Record<string, string>;
 }
@@ -29,13 +29,13 @@ export function parseApiRequest(request: ApiRequest): Request {
 
   // Parse headers
   const headers = new Headers(request.headers || {});
-  if (request.status !== '204' && !(request.body instanceof FormData)) {
+  if (request.body && !(request.body instanceof FormData)) {
     headers.append('Content-Type', 'application/json');
   }
 
-  return new Request(request.path, {
+  return new Request(url.toString(), {
     method: request.method.toUpperCase(),
     headers,
-    body: request.body instanceof FormData ? request.body : JSON.stringify(request.body),
+    body: request.body ? (request.body instanceof FormData ? request.body : JSON.stringify(request.body)) : undefined,
   });
 }
