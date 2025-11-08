@@ -42,13 +42,3 @@ export function parseApiRequest(request: ApiRequest): Request {
   });
 }
 
-console.log(
-  parseApiRequest({
-    baseUrl: 'https://api.example.com',
-    path: '/users/{id}',
-    method: 'get',
-    status: '200',
-    pathParams: { id: '123' },
-    queryParams: { includeDetails: 'true' },
-  })
-);
