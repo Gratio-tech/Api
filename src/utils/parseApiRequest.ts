@@ -41,4 +41,3 @@ export function parseApiRequest(request: ApiRequest): Request {
     body: request.body ? (request.body instanceof FormData ? request.body : JSON.stringify(request.body)) : undefined,
   });
 }
-
