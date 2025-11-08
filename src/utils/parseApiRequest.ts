@@ -26,7 +26,7 @@ export function parseApiRequest(request: ApiRequest): Request {
   for (const [key, value] of Object.entries(request.pathParams || {})) {
     // %7B = {
     // %7D = }
-    url.pathname = url.pathname.replace(`%7B${key}%7D`, encodeURIComponent(String(value)));
+    url.pathname = url.pathname.replace(new RegExp(`%7B${key}%7D`, 'g'), encodeURIComponent(String(value)));
   }
 
   // Parse headers
