@@ -24,7 +24,9 @@ export function parseApiRequest(request: ApiRequest): Request {
 
   // Parse path parameters
   for (const [key, value] of Object.entries(request.pathParams || {})) {
-    url.pathname = url.pathname.replace(`{${key}}`, encodeURIComponent(String(value)));
+    // %7B = {
+    // %7D = }
+    url.pathname = url.pathname.replace(`%7B${key}%7D`, encodeURIComponent(String(value)));
   }
 
   // Parse headers
@@ -39,3 +41,14 @@ export function parseApiRequest(request: ApiRequest): Request {
     body: request.body ? (request.body instanceof FormData ? request.body : JSON.stringify(request.body)) : undefined,
   });
 }
+
+console.log(
+  parseApiRequest({
+    baseUrl: 'https://api.example.com',
+    path: '/users/{id}',
+    method: 'get',
+    status: '200',
+    pathParams: { id: '123' },
+    queryParams: { includeDetails: 'true' },
+  })
+);
