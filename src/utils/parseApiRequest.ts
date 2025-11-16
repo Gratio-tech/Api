@@ -15,7 +15,7 @@ interface ApiRequest extends ApiResponse {
 /** Parse ApiRequest to a Request object. */
 export function parseApiRequest(request: ApiRequest): Request {
   // Parse query parameters
-  const url = new URL(request.path, request.baseUrl);
+  const url = new URL(request.baseUrl + request.path);
   if (request.queryParams) {
     for (const [key, value] of Object.entries(request.queryParams)) {
       url.searchParams.append(key, String(value));
