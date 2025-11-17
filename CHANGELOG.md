@@ -5,6 +5,12 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 и этот проект придерживается [Semantic Versioning](https://semver.org/lang/ru/).
 
+## [3.1.2] - 2025-11-16
+
+### Исправлено
+
+- URL теперь правильно собирается в утилите `parseApiRequest`, включая префикс
+
 ## [3.1.1] - 2025-11-08
 
 ### Исправлено
