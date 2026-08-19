@@ -7,47 +7,37 @@ on:
 
 concurrency:
   group: publish-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   test-and-publish:
     name: Test, build and publish
     runs-on: ubuntu-latest
+    # В Trusted Publisher должен совпадать Environment = production.
     environment: production
     permissions:
       contents: read
-      packages: write
       id-token: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.2.19   # явно, чтобы не ловить latest
+          bun-version: 1.2.19
 
       - name: Restore Bun global install cache
         uses: actions/cache@v4
-        id: bun-cache
         with:
-          path: ${{ env.HOME }}/.bun/install/cache
-          key: ${{ runner.os }}-bun-cache-${{ hashFiles('**/bun.lock','**/bun.lockb','**/package.json') }}
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-cache-${{ hashFiles('bun.lock', 'bun.lockb', 'package.json') }}
           restore-keys: |
             ${{ runner.os }}-bun-cache-
 
       - name: Install dependencies (reproducible)
-        run: bun ci
-
-      - name: Save Bun cache (if changed)
-        if: steps.bun-cache.outputs.cache-hit != 'true'
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.HOME }}/.bun/install/cache
-          key: ${{ runner.os }}-bun-cache-${{ hashFiles('**/bun.lock','**/bun.lockb','**/package.json') }}
+        run: bun install --frozen-lockfile
 
       - name: Run tests
         run: bun test
@@ -58,23 +48,26 @@ jobs:
       - name: Ensure package is not private
         run: |
           node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
+            const pkg = require('./package.json');
             if (pkg.private) {
               console.error('package.json.private is true — aborting publish');
               process.exit(1);
             }
           "
 
-      - name: Set next stable patch version
+      - name: Decide whether version is new
+        id: release
         run: |
           PACKAGE_NAME="$(node -p "require('./package.json').name")"
+          REQUESTED="$(node -p "require('./package.json').version")"
           NPM_LATEST="$(npm view "$PACKAGE_NAME" dist-tags.latest 2>/dev/null || true)"
-          export NPM_LATEST
-          node <<'NODE'
-          const fs = require('fs');
-          const pkgPath = 'package.json';
-          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+
+          echo "package:  $PACKAGE_NAME"
+          echo "requested: $REQUESTED"
+          echo "npm latest: ${NPM_LATEST:-<none>}"
+
+          SHOULD_PUBLISH="$(
+            REQUESTED="$REQUESTED" NPM_LATEST="$NPM_LATEST" node <<'NODE'
           const parseStableVersion = value => {
             const [core] = String(value).split('-');
             const parts = core.split('.').map(Number);
@@ -94,35 +87,29 @@ jobs:
             }
             return 0;
           };
-          const requested = parseStableVersion(pkg.version);
+          const requested = parseStableVersion(process.env.REQUESTED);
           const latest = process.env.NPM_LATEST
             ? parseStableVersion(process.env.NPM_LATEST)
             : null;
-          const next =
-            latest && compare(requested, latest) <= 0
-              ? [latest[0], latest[1], latest[2] + 1]
-              : requested;
-          pkg.version = next.join('.');
-          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-          console.log(`Publishing ${pkg.name}@${pkg.version}`);
+          const shouldPublish = !latest || compare(requested, latest) > 0;
+          process.stdout.write(shouldPublish ? 'true' : 'false');
           NODE
+          )"
+
+          echo "should_publish=$SHOULD_PUBLISH" >> "$GITHUB_OUTPUT"
+          if [ "$SHOULD_PUBLISH" = "true" ]; then
+            echo "Publishing $PACKAGE_NAME@$REQUESTED"
+          else
+            echo "Skip publish: $PACKAGE_NAME@$REQUESTED is not newer than npm latest (${NPM_LATEST:-none})"
+          fi
 
       - name: Setup Node (for npm publish)
+        if: steps.release.outputs.should_publish == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Authenticate to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          npm config set //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
-
-      - name: Show package.json tail
-        run: cat -A package.json | tail -20
-
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        if: steps.release.outputs.should_publish == 'true'
         run: npm publish --access public --tag latest --provenance
