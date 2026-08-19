@@ -1,6 +1,8 @@
 # @gratio/api
 
-TypeScript типы для API ответов и запросов в проектах Gratio. Пакет предоставляет базовые типы для работы с API и включает в себя CLI для автоматической генерации типов из OpenAPI спецификаций.
+[![npm version](https://img.shields.io/npm/v/@gratio/api?color=%23ff9d29)](https://www.npmjs.com/package/@gratio/api)
+
+Генератор TypeScript типов для API ответов и запросов в проектах Gratio. Пакет предоставляет базовые типы для работы с API и включает в себя CLI для автоматической генерации типов из OpenAPI спецификаций.
 
 ## Возможности
 
