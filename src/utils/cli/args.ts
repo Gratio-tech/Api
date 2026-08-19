@@ -6,8 +6,9 @@ export const isSilent = (args: Record<string, unknown>): boolean => args.silent 
 
 export const isUrl = (str: string): boolean => {
   try {
-    new URL(str);
-    return true;
+    const parsed = new URL(str);
+    // On Windows, a path like "C:" was resolved as correct protocol, so the scheme needs to be checked precisely
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
   } catch {
     return false;
   }
