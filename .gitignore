@@ -1,5 +1,7 @@
 # Dependencies
 node_modules/
+jspm_packages/
+package-lock.json
 
 # Build output
 dist/
@@ -24,9 +26,6 @@ pids
 
 # nyc test coverage
 .nyc_output
-
-# Dependency directories
-jspm_packages/
 
 # Optional npm cache directory
 .npm

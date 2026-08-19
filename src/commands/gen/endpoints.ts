@@ -95,7 +95,6 @@ export default defineCommand({
       type: 'string',
       description: 'The output path for the generated endpoint file (OPENAPI_ENDPOINTS_OUTPUT).',
       short: 'o',
-      default: 'stdout',
     },
   },
   run: async ({ args }) => {
@@ -112,7 +111,7 @@ export default defineCommand({
       const spec = parseSpec(specContents);
       const paths = getPaths(spec);
 
-      const outputPath = args.output ?? process.env.OPENAPI_ENDPOINTS_OUTPUT;
+      const outputPath = args.output ?? process.env.OPENAPI_ENDPOINTS_OUTPUT ?? 'stdout';
 
       const template = createTemplate(
         [

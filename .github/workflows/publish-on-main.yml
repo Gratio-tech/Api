@@ -64,31 +64,46 @@ jobs:
             }
           "
 
-      - name: Compute short SHA
-        id: sha
-        run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-
-      - name: Set version to BASE-SHORTSHA (e.g. 2.0.0-913bade)
-        id: set_version
+      - name: Set next stable patch version
         run: |
-          node -e '
-            const fs = require("fs");
-            const pkgPath = "package.json";
-            const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
-            // base: take only X.Y.Z part (strip any prerelease part)
-            const base = String(pkg.version || "0.0.0").split("-")[0];
-            const sha = process.env.SHORT_SHA.substring(0, 4) || "unknown";
-            const newVersion = `${base}-${sha}`;
-            if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z-]+)?$/.test(newVersion)) {
-              console.error("Computed version not semver:", newVersion);
-              process.exit(1);
+          PACKAGE_NAME="$(node -p "require('./package.json').name")"
+          NPM_LATEST="$(npm view "$PACKAGE_NAME" dist-tags.latest 2>/dev/null || true)"
+          export NPM_LATEST
+          node <<'NODE'
+          const fs = require('fs');
+          const pkgPath = 'package.json';
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+          const parseStableVersion = value => {
+            const [core] = String(value).split('-');
+            const parts = core.split('.').map(Number);
+            if (
+              parts.length !== 3 ||
+              parts.some(part => !Number.isInteger(part) || part < 0)
+            ) {
+              throw new Error(`Invalid semver version: ${value}`);
             }
-            pkg.version = newVersion;
-            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
-            console.log("Updated package.json version to", newVersion);
-          '
-        env:
-          SHORT_SHA: ${{ env.SHORT_SHA }}
+            return parts;
+          };
+          const compare = (left, right) => {
+            for (let index = 0; index < 3; index += 1) {
+              if (left[index] !== right[index]) {
+                return left[index] - right[index];
+              }
+            }
+            return 0;
+          };
+          const requested = parseStableVersion(pkg.version);
+          const latest = process.env.NPM_LATEST
+            ? parseStableVersion(process.env.NPM_LATEST)
+            : null;
+          const next =
+            latest && compare(requested, latest) <= 0
+              ? [latest[0], latest[1], latest[2] + 1]
+              : requested;
+          pkg.version = next.join('.');
+          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+          console.log(`Publishing ${pkg.name}@${pkg.version}`);
+          NODE
 
       - name: Setup Node (for npm publish)
         uses: actions/setup-node@v4
@@ -108,4 +123,4 @@ jobs:
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: npm publish --access public --tag latest --provenance

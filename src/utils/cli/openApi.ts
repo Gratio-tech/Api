@@ -1,48 +1,66 @@
 import { readFile } from 'node:fs/promises';
 import { createInterface } from 'node:readline/promises';
 
-import { isUrl } from '~/utils/cli/args';
+import { isUrl, normalizeSpecLink } from '~/utils/cli/args';
 import { canPrompt } from '~/utils/cli/prompt';
 
 import type { OpenAPI3, ReferenceObject } from 'openapi-typescript';
 
-export async function getSpecLink(args: Record<string, unknown>, envName: string): Promise<string> {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
+// createPromptInterface helper needed to ensure normal development in the Node environment.
+// process.stdin in Bun types has a weaker AsyncIterator, while node:readline/promises requires
+// a Node-compatible NodeJS.ReadableStream with AsyncIterableIterator. At Node runtime, this is the normal stdin.
+function createPromptInterface() {
+  return createInterface({
+    input: process.stdin as unknown as NodeJS.ReadableStream,
+    output: process.stdout as unknown as NodeJS.WritableStream,
   });
-
-  if (!process.env[envName] && !canPrompt(args)) {
-    console.warn('No link provided. Skipping.');
-    process.exit(0);
-  }
-
-  const specLink = args.link ?? process.env[envName] ?? (await rl.question(`Please enter the link to the OpenAPI spec (${envName}): `));
-
-  rl.close();
-
-  return specLink as string;
 }
 
-export async function getToken(args: Record<string, unknown>, envName: string): Promise<string> {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+export async function getSpecLink(args: Record<string, unknown>, envKey: string): Promise<string> {
+  const fromArgs = typeof args.link === 'string' ? args.link : undefined;
+  // First, need to check the CLI arguments, they should have maximum priority,
+  // and only then try to read .env and ask for input.
+  const fromEnv = process.env[envKey];
+  const rawLink = fromArgs ?? fromEnv;
 
-  if (!process.env[envName] && !canPrompt(args)) {
-    console.warn('No PAT provided. Skipping.');
-    process.exit(0);
+  if (rawLink) {
+    return normalizeSpecLink(rawLink) as string;
   }
 
-  const token =
-    args.token ??
-    process.env[envName] ??
-    (await rl.question(`PAT is required. Please enter your Personal Access Token for GitLab or GitHub (${envName}): `));
+  if (!canPrompt(args)) {
+    throw new Error(`OpenAPI link (or path to local file) is required: pass --link or set ${envKey}.`);
+  }
 
-  rl.close();
+  const rl = createPromptInterface();
 
-  return token as string;
+  try {
+    const promptedLink = await rl.question(
+      `Please enter the link (or path to local file) to the OpenAPI spec (${envKey}): `
+    );
+    return normalizeSpecLink(promptedLink);
+  } finally {
+    rl.close();
+  }
+}
+
+export async function getToken(args: Record<string, unknown>, tokenEnvKey: string): Promise<string> {
+  const token = args.token ?? process.env[tokenEnvKey];
+
+  if (token) {
+    return token as string;
+  }
+
+  if (!canPrompt(args)) {
+    throw new Error(`Personal Access Token (PAT) for GitLab or GitHub is required: pass --token or set ${tokenEnvKey}.`);
+  }
+
+  const rl = createPromptInterface();
+
+  try {
+    return await rl.question(`PAT is required. Please enter Personal Access Token for GitLab or GitHub (${tokenEnvKey}): `);
+  } finally {
+    rl.close();
+  }
 }
 
 export async function getSpecContents(url: string, args: Record<string, unknown>, envName: string): Promise<string> {

@@ -37,7 +37,6 @@ export default defineCommand({
       type: 'string',
       description: 'The output path for the generated types file (OPENAPI_TYPES_OUTPUT).',
       short: 'o',
-      default: 'stdout',
     },
   },
   run: async ({ args }) => {
@@ -60,7 +59,7 @@ export default defineCommand({
       const ast = await openapiTS(specContents);
       const contents = astToString(ast);
 
-      const outputPath = args.output ?? process.env.OPENAPI_TYPES_OUTPUT;
+      const outputPath = args.output ?? process.env.OPENAPI_TYPES_OUTPUT ?? 'stdout';
 
       if (outputPath === 'stdout') {
         console.log(contents);
